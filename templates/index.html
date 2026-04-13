@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MobiConfig</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <link rel="icon" type="image/png" href="/static/LogoMobiConfig.png">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-item.active { background-color: #f1f5f9; color: #124b4e; box-shadow: inset 4px 0 0 #f97316; }
+        .h-btn.active { background-color: #124b4e; color: white; border-color: #124b4e; }
+        .hidden { display: none; }
+        /* Animation fluide pour le survol du logo */
+        .logo-container img { transition: transform 0.3s ease; }
+        .logo-container img:hover { transform: scale(1.02); }
+    </style>
+</head>
+<body class="bg-[#f8fafc] min-h-screen flex text-slate-900">
+
+    <aside class="w-72 bg-[#124b4e] flex flex-col sticky top-0 h-screen text-slate-100 shadow-2xl z-50">
+        <div class="p-4 flex-grow">
+            
+            <div class="logo-container flex flex-col items-center mt-8 mb-12">
+                <img src="/static/LogoMobiConfig.png" alt="MobiConfig Logo" class="w-64 h-auto object-contain">
+            </div>
+            
+            <nav class="space-y-2 px-4">
+                <p class="text-[10px] font-black text-teal-400 uppercase tracking-[0.2em] mb-4 px-4 opacity-50">Catalogue</p>
+                {% for cat_name in categories.keys() %}
+                <button onclick="switchTab('{{ cat_name }}')" id="tab-btn-{{ cat_name }}" class="sidebar-item w-full flex items-center px-5 py-3 rounded-xl hover:bg-[#1a5f63] transition-all font-semibold text-sm">
+                    {{ cat_name }}
+                </button>
+                {% endfor %}
+                
+                <div class="pt-8 border-t border-teal-900/50 mt-4">
+                    <p class="text-[10px] font-black text-teal-400 uppercase tracking-[0.2em] mb-4 px-4 opacity-50">Ma Commande</p>
+                    <button onclick="switchTab('Panier')" id="tab-btn-Panier" class="sidebar-item w-full flex items-center justify-between px-5 py-3 rounded-xl hover:bg-[#1a5f63] transition-all font-semibold text-sm">
+                        <span>Mon Panier</span>
+                        <span class="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-lg font-bold">{{ panier|length }}</span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+        <div class="p-6 text-[10px] text-teal-500/50 text-center font-bold tracking-widest uppercase">
+            © 2026 MobiConfig Pro
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 lg:p-12 overflow-y-auto bg-[#f1f5f9]">
+        <div class="max-w-6xl mx-auto">
+            
+            <div class="flex items-center gap-5 mb-10">
+                <img src="/static/LogoMobiConfig.png" alt="Logo" class="w-16 h-16 object-contain">
+                <div>
+                    <h2 id="current-category-title" class="text-4xl font-black text-[#124b4e] tracking-tight">Configuration</h2>
+                    <p class="text-slate-500 font-medium italic">Configurateur de mobilier professionnel</p>
+                </div>
+            </div>
+            
+            <div id="section-config">
+                <div id="height-selector-container" class="hidden mb-8 flex items-center gap-4 animate-in slide-in-from-left">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mr-2">Hauteur (mm) :</p>
+                    <button type="button" onclick="filterHeight('1400')" id="btn-1400" class="h-btn bg-white border-2 border-slate-200 px-6 py-2 rounded-full font-bold transition-all">1400</button>
+                    <button type="button" onclick="filterHeight('1600')" id="btn-1600" class="h-btn bg-white border-2 border-slate-200 px-6 py-2 rounded-full font-bold transition-all">1600</button>
+                    <button type="button" onclick="filterHeight('1800')" id="btn-1800" class="h-btn bg-white border-2 border-slate-200 px-6 py-2 rounded-full font-bold transition-all">1800</button>
+                </div>
+
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-10 mb-8">
+                    <form method="POST" id="config-form" class="space-y-10">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Modèle de produit</label>
+                                {% for cat_name, items in categories.items() %}
+                                    {% if cat_name == "Gondole simple" or cat_name == "Gondole Double" %}
+                                        <div id="container-{{ cat_name|replace(' ', '-') }}" class="height-group hidden">
+                                            {% for height, sub_items in items.items() %}
+                                            <select id="select-{{ cat_name|replace(' ', '-') }}-{{ height }}" class="sub-select w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl hidden font-semibold">
+                                                {% for id, p in sub_items.items() %}
+                                                <option value="{{ id }}">{{ p.nom }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <select id="select-{{ cat_name|replace(' ', '-') }}" class="standard-select w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl hidden font-semibold">
+                                            {% for id, p in items.items() %}
+                                            <option value="{{ id }}">{{ p.nom }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Etagères suppl. (k)</label>
+                                <input type="number" name="k_value" value="{{ resultat.k_utilise if resultat else 7 }}" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-orange-400 uppercase tracking-widest mb-4">Quantité voulue</label>
+                                <input type="number" name="qte_produit" value="{{ resultat.qte_voulue if resultat else 1 }}" min="1" class="w-full p-4 bg-orange-50 border border-orange-200 rounded-2xl font-black text-orange-600 text-xl">
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-4 border-t border-slate-50 pt-10">
+                            <button type="submit" name="action" value="calculer" class="bg-slate-800 hover:bg-black text-white font-bold py-4 px-10 rounded-2xl shadow-xl transition-all flex items-center gap-3">
+                                Voir le détail des pièces
+                            </button>
+                            <button type="submit" name="action" value="ajouter" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-10 rounded-2xl shadow-xl transition-all">
+                                + Ajouter au panier
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {% if resultat %}
+                <div class="bg-white rounded-[2.5rem] shadow-2xl border-2 border-orange-100 overflow-hidden mb-10 animate-in fade-in zoom-in">
+                    <div class="bg-orange-50 p-8 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-[#124b4e] font-black text-2xl tracking-tight">{{ resultat.nom_produit }}</h3>
+                            <p class="text-orange-600 text-sm font-bold uppercase mt-1 tracking-widest font-mono">k = {{ resultat.k_utilise }} | Quantité = {{ resultat.qte_voulue }}</p>
+                        </div>
+                        <span class="text-4xl font-black text-[#124b4e]">{{ "{:.2f}".format(resultat.prix_total_ht) }} € HT</span>
+                    </div>
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-400 uppercase text-[10px] font-black tracking-widest">
+                            <tr><th class="px-10 py-5">Réf</th><th class="px-10 py-5">Désignation</th><th class="px-10 py-5 text-center">Qté</th><th class="px-10 py-5 text-right">Total</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for comp in resultat.composants %}
+                            <tr>
+                                <td class="px-10 py-4 font-mono text-xs text-slate-400">P{{ comp.id }}</td>
+                                <td class="px-10 py-4 font-bold">{{ comp.nom }}</td>
+                                <td class="px-10 py-4 text-center"><span class="bg-[#124b4e] text-white px-3 py-1 rounded-lg font-black text-xs">x {{ comp.qte }}</span></td>
+                                <td class="px-10 py-4 text-right font-medium text-slate-400">{{ "{:.2f}".format(comp.total_ligne) }} €</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+
+            <div id="section-panier" class="hidden">
+                <div class="flex justify-between items-end mb-12">
+                    <h2 class="text-5xl font-black text-[#124b4e]">Mon Panier</h2>
+                    <a href="/vider" class="bg-red-50 text-red-500 px-8 py-3 rounded-full font-bold text-xs hover:bg-red-500 hover:text-white transition-all">Vider le panier</a>
+                </div>
+                {% if panier %}
+                <div class="space-y-10">
+                    <div class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase">
+                                <tr><th class="px-10 py-8">Désignation</th><th class="px-10 py-8 text-center">Config</th><th class="px-10 py-8 text-center">Quantité</th><th class="px-10 py-8 text-right">Sous-total</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for item in panier %}
+                                <tr class="border-t">
+                                    <td class="px-10 py-8 font-black text-[#124b4e] text-xl">{{ item.nom }}</td>
+                                    <td class="px-10 py-8 text-center text-slate-400 font-bold">k = {{ item.k }}</td>
+                                    <td class="px-10 py-8 text-center"><span class="bg-[#124b4e] text-white px-5 py-2 rounded-full font-black shadow-md text-sm">x {{ item.qte }}</span></td>
+                                    <td class="px-10 py-8 text-right font-black text-2xl text-slate-800">{{ "{:.2f}".format(item.total_ht) }} €</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="bg-[#124b4e] p-12 text-white flex justify-between items-center border-t-8 border-orange-500">
+                            <span class="text-xl font-bold opacity-50 uppercase tracking-widest">Total Panier HT</span>
+                            <span class="text-6xl font-black text-orange-500">{{ "{:.2f}".format(total_panier_ht) }} €</span>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-40 bg-white rounded-[3rem] border-4 border-dashed border-slate-200 opacity-60">
+                    <p class="text-slate-400 font-black text-2xl uppercase tracking-widest">Votre panier est vide</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentActiveCategory = "";
+
+        function switchTab(catName) {
+            currentActiveCategory = catName;
+            const configSection = document.getElementById('section-config');
+            const panierSection = document.getElementById('section-panier');
+            const heightSelector = document.getElementById('height-selector-container');
+
+            document.querySelectorAll('select').forEach(el => { el.classList.add('hidden'); el.removeAttribute('name'); });
+            document.querySelectorAll('.height-group, .standard-select').forEach(el => el.classList.add('hidden'));
+
+            if (catName === 'Panier') {
+                configSection?.classList.add('hidden');
+                panierSection?.classList.remove('hidden');
+            } else {
+                configSection?.classList.remove('hidden');
+                panierSection?.classList.add('hidden');
+                const titleEl = document.getElementById('current-category-title');
+                if(titleEl) titleEl.innerText = catName;
+
+                const catSlug = catName.replace(/\s+/g, '-');
+                if (catName === "Gondole simple" || catName === "Gondole Double") {
+                    heightSelector?.classList.remove('hidden');
+                    document.getElementById('container-' + catSlug)?.classList.remove('hidden');
+                    filterHeight(localStorage.getItem('activeHeight') || '1400');
+                } else {
+                    heightSelector?.classList.add('hidden');
+                    const standardSel = document.getElementById('select-' + catSlug);
+                    if (standardSel) {
+                        standardSel.classList.remove('hidden');
+                        standardSel.setAttribute('name', 'id_produit');
+                    }
+                }
+            }
+            document.querySelectorAll('.sidebar-item').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-btn-' + catName)?.classList.add('active');
+            localStorage.setItem('activeTabMobi', catName);
+        }
+
+        function filterHeight(height) {
+            if (!currentActiveCategory) return;
+            document.querySelectorAll('.h-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + height)?.classList.add('active');
+
+            const catSlug = currentActiveCategory.replace(/\s+/g, '-');
+            const container = document.getElementById('container-' + catSlug);
+            if(container) {
+                container.querySelectorAll('select').forEach(el => { el.classList.add('hidden'); el.removeAttribute('name'); });
+                const target = document.getElementById('select-' + catSlug + '-' + height);
+                if(target) { target.classList.remove('hidden'); target.setAttribute('name', 'id_produit'); }
+            }
+            localStorage.setItem('activeHeight', height);
+        }
+
+        window.onload = () => switchTab(localStorage.getItem('activeTabMobi') || 'Extensible');
+    </script>
+</body>
+</html>
